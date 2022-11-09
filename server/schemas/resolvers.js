@@ -1,5 +1,5 @@
 const { AuthenticationError } = require('apollo-server-express');
-const { User, Book } = require('../models');
+const { User  } = require('../models');
 const { signToken } = require('../utils/auth');
 
 const resolvers = {
@@ -45,13 +45,13 @@ const resolvers = {
     },
 
     // Add a third argument to the resolver to access data in our `context`
-    saveBook: async (parent, { userId, book }, context) => {
+    saveBook: async (parent, { input }, context) => {
       // If context has a `user` property, that means the user executing this mutation has a valid JWT and is logged in
       if (context.user) {
         return User.findOneAndUpdate(
-          { _id: userId },
+          { _id: context.user._Id },
           {
-            $addToSet: { savedBooks: book },
+            $addToSet: { savedBooks: input },
           },
           {
             new: true,
@@ -64,11 +64,11 @@ const resolvers = {
     },
    
     // Make it so a logged in user can only remove a skill from their own profile
-    removeBook: async (parent, { userId, book }, context) => {
+    removeBook: async (parent,  args, context) => {
       if (context.user) {
         return User.findOneAndUpdate(
           { _id: context.user._id },
-          { $pull: { savedBooks: book } },
+          { $pull: { savedBooks: {bookId: args.bookId} } },
           { new: true }
         );
       }
